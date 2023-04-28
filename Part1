@@ -1,0 +1,226 @@
+using System;
+using System.Collections.Generic;
+
+class Recipe
+{
+    // A list of tuples to store ingredient details: name, quantity, and unit.
+    public List<(string Name, double Quantity, string Unit)> Ingredients { get; set; }
+
+    // A list of strings to store recipe steps.
+    public List<string> Steps { get; set; }
+
+    // The original quantities of the ingredients (used for resetting).
+    private List<(string Name, double Quantity, string Unit)> originalQuantities;
+
+    public Recipe()
+    {
+        Ingredients = new List<(string Name, double Quantity, string Unit)>();
+        Steps = new List<string>();
+    }
+
+    // A method to scale the recipe by a factor.
+    public void Scale(double factor)
+    {
+        if (originalQuantities == null)
+        {
+            // Store the original quantities if we haven't already.
+            originalQuantities = new List<(string Name, double Quantity, string Unit)>(Ingredients);
+        }
+
+        // Loop through each ingredient and update its quantity.
+        for (int i = 0; i < Ingredients.Count; i++)
+        {
+            Ingredients[i] = (Ingredients[i].Name, originalQuantities[i].Quantity * factor, Ingredients[i].Unit);
+        }
+    }
+
+    // A method to reset the quantities of the ingredients to their original values.
+    public void ResetQuantities()
+    {
+        if (originalQuantities != null)
+        {
+            // Restore the original quantities.
+            for (int i = 0; i < Ingredients.Count; i++)
+            {
+                Ingredients[i] = originalQuantities[i];
+            }
+
+            originalQuantities = null;
+        }
+    }
+
+    // A method to display the recipe.
+    public void Display()
+    {
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine("Ingredients:");
+        Console.ResetColor();
+
+        // Loop through each ingredient and display its details.
+        foreach (var ingredient in Ingredients)
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"{ingredient.Quantity} {ingredient.Unit} of {ingredient.Name}");
+            Console.ResetColor();
+        }
+
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine("\nSteps:");
+        Console.ResetColor();
+
+        // Loop through each step and display its number and description.
+        for (int i = 0; i < Steps.Count; i++)
+        {
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine($"{i + 1}. {Steps[i]}");
+            Console.ResetColor();
+        }
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        // Create a new recipe object and set the running flag to true.
+        Recipe recipe = new Recipe();
+        bool running = true;
+
+        while (running)
+        {
+            Console.WriteLine("\nOptions:");
+            Console.WriteLine("1. Enter recipe details");
+            Console.WriteLine("2. Display recipe");
+            Console.WriteLine("3. Scale recipe");
+            Console.WriteLine("4. Reset quantities");
+            Console.WriteLine("5. Clear recipe");
+            Console.WriteLine("6. Exit");
+            Console.Write("Enter your choice: ");
+
+            // Check if the user entered a valid integer.
+            if (int.TryParse(Console.ReadLine(), out int choice))
+            {
+                switch (choice)
+                {
+                    case 1:
+                        // Prompt the user to enter the number of ingredients.
+                        Console.Write("Enter the number of ingredients: ");
+                        int numIngredients = int.Parse(Console.ReadLine());
+
+                        for (int i = 0; i < numIngredients; i++)
+                        {
+                            try
+                            {
+                                // Prompt the user to enter the ingredient details: name, quantity, and unit.
+                                Console.Write($"Enter the name of ingredient {i + 1}: ");
+                                string name = Console.ReadLine();
+
+                                Console.Write($"Enter the quantity of ingredient {i + 1}: ");
+                                double quantity = double.Parse(Console.ReadLine());
+
+                                Console.Write($"Enter the unit of ingredient {i + 1}: ");
+                                string unit = Console.ReadLine();
+
+                                // Add the ingredient details to the recipe object.
+                                recipe.Ingredients.Add((name, quantity, unit));
+                            }
+                            catch (Exception ex)
+                            {
+                                // If there is an error, display the error message and decrement the loop counter.
+                                Console.WriteLine($"Error: {ex.Message}");
+                                i--;
+                            }
+                        }
+
+                        // Prompt the user to enter the number of steps.
+                        Console.Write("Enter the number of steps: ");
+                        int numSteps = int.Parse(Console.ReadLine());
+
+                        for (int i = 0; i < numSteps; i++)
+                        {
+                            try
+                            {
+                                Console.Write($"Enter step {i + 1}: ");
+                                string step = Console.ReadLine();
+
+                                if (string.IsNullOrWhiteSpace(step))
+                                {
+                                    throw new ArgumentException("Step cannot be empty.");
+                                }
+
+                                recipe.Steps.Add(step);
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"Error: {ex.Message}");
+                                i--;
+                            }
+                        }
+
+
+
+                        break;
+
+                    case 2:
+                        recipe.Display();
+                        break;
+
+                    case 3:
+                        double scalingFactor = 0;
+                        bool validInput = false;
+
+                        while (!validInput)
+                        {
+                            Console.Write("Enter the scaling factor (0.5, 2, or 3): ");
+                            if (double.TryParse(Console.ReadLine(), out scalingFactor))
+                            {
+                                if (scalingFactor == 0.5 || scalingFactor == 2 || scalingFactor == 3)
+                                {
+                                    validInput = true;
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Invalid input. Please enter a valid scaling factor.");
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine("Invalid input. Please enter a valid scaling factor.");
+                            }
+                        }
+
+                        recipe.Scale(scalingFactor);
+                        Console.WriteLine($"Recipe scaled by a factor of {scalingFactor}.");
+                        break;
+
+                    case 4:
+                        recipe.ResetQuantities();
+                        Console.WriteLine("Quantities reset to original values.");
+                        break;
+
+                    case 5:
+                        Console.Write("Are you sure you want to clear the recipe? (y/n): ");
+                        char confirm = Console.ReadKey().KeyChar;
+                        if (confirm == 'y' || confirm == 'Y')
+                        {
+                            recipe = new Recipe();
+                            Console.WriteLine("\nRecipe cleared.");
+                        }
+                        else
+                        {
+                            Console.WriteLine("\nClearing canceled.");
+                        }
+                        break;
+
+                    case 6:
+                        running = false;
+                        break;
+
+                    default:
+                        Console.WriteLine("Invalid choice. Please try again.");
+                        break;
+                }
+            }
+        }
+    }
+}
